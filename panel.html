@@ -1,0 +1,675 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Панель управления</title>
+<style>
+:root{
+  --bg:#f5f9f6;
+  --surface:#ffffff;
+  --surface-2:#eef5f0;
+  --border:#dce7e0;
+  --text:#16241c;
+  --text-dim:#63756b;
+  --text-faint:#9caaa2;
+  --accent:#16a34a;
+  --accent-2:#22c55e;
+  --green:#15803d;
+  --red:#dc2626;
+  --orange:#c2740c;
+  --blue:#2563eb;
+  --purple:#7c3aed;
+  --radius:14px;
+  --radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ---------- LOGIN ---------- */
+#login-screen{position:fixed;inset:0;background:radial-gradient(circle at 50% 20%,#eef6f0,#f5f9f6 70%);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(22,52,34,0.12)}
+.login-logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;box-shadow:0 6px 24px rgba(22,163,74,0.3);animation:logoPulse 2.6s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{box-shadow:0 6px 24px rgba(22,163,74,0.3);transform:scale(1)}50%{box-shadow:0 8px 36px rgba(22,163,74,0.5);transform:scale(1.04)}}
+.login-logo svg{animation:logoCheck 2.6s ease-in-out infinite}
+@keyframes logoCheck{0%,60%,100%{stroke-dashoffset:0}30%{stroke-dashoffset:2}}
+.login-title{font-size:22px;font-weight:700;text-align:center;margin-bottom:5px;color:var(--text);letter-spacing:-.01em}
+.login-sub{font-size:13px;color:var(--text-dim);text-align:center;margin-bottom:24px}
+.login-err{border-radius:10px;padding:11px 14px;font-size:13px;text-align:center;margin-bottom:16px;display:none;background:rgba(248,105,95,0.12);color:var(--red);border:1px solid rgba(248,105,95,0.25)}
+.inp{width:100%;padding:13px 15px;font-size:15px;border:1.5px solid var(--border);border-radius:12px;outline:none;margin-bottom:14px;background:var(--bg);color:var(--text);transition:border-color .2s,box-shadow .2s}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(22,163,74,0.14)}
+.btn-red{width:100%;padding:14px;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;border:none;border-radius:12px;cursor:pointer;transition:filter .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-red:hover{filter:brightness(1.08)}
+.btn-red:active{transform:scale(.98)}
+.btn-red:disabled{opacity:.5;cursor:not-allowed}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- LAYOUT ---------- */
+#main{display:none;min-height:100vh}
+.topnav{background:rgba(21,21,24,0.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:10px;flex-wrap:wrap}
+.brand{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.01em}
+.brand span{color:var(--accent)}
+.topnav-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.user-badge{font-size:11px;color:var(--text-dim);background:var(--bg);border:1px solid var(--border);padding:5px 10px;border-radius:8px;font-weight:600;white-space:nowrap}
+.logout-btn{font-size:12px;color:var(--text-dim);background:none;border:1px solid var(--border);cursor:pointer;padding:5px 10px;border-radius:8px;transition:all .2s;white-space:nowrap}
+.logout-btn:hover{color:var(--text);border-color:var(--text-faint)}
+.page-content{padding:16px 12px 60px;max-width:900px;margin:0 auto;width:100%}
+
+/* ---------- STATS ---------- */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.stat-num{font-size:20px;font-weight:800;color:var(--text)}
+.stat-label{font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;font-weight:600}
+
+/* ---------- CARDS ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 14px;margin-bottom:16px;width:100%}
+.card-title{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.form-group{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px}
+.form-group label{font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+select,.finp{width:100%;padding:11px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);outline:none;background:var(--bg);color:var(--text);transition:border-color .2s}
+select:focus,.finp:focus{border-color:var(--accent)}
+select option{background:var(--bg)}
+.toggle-row{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.toggle-label{font-size:12px;color:var(--text-dim);flex:1;line-height:1.3}
+.toggle-label b{color:var(--text);font-weight:600}
+.toggle{position:relative;width:44px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:13px;cursor:pointer;transition:.3s}
+.toggle-slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);border-radius:50%;transition:.3s}
+input:checked+.toggle-slider{background:var(--accent)}
+input:checked+.toggle-slider:before{transform:translateX(18px);background:white}
+.btn-gen{width:100%;padding:13px;font-size:14px;font-weight:700;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap;transition:filter .15s;margin-top:10px}
+.btn-gen:hover{filter:brightness(1.1)}
+.btn-gen:active{filter:brightness(.9)}
+.result-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;display:none}
+.result-code{font-size:26px;font-weight:800;letter-spacing:.12em;color:var(--text);text-align:center;margin-bottom:6px;font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.result-meta{font-size:12px;color:var(--text-dim);text-align:center;margin-bottom:12px}
+.result-tags{display:flex;gap:6px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.copy-btn{display:block;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:800;cursor:pointer;transition:opacity .15s}
+.copy-btn:hover{opacity:.9}
+
+/* ---------- FILTERS ---------- */
+.filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:7px 12px;font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;color:var(--text-dim);transition:all .2s;flex:1;min-width:70px;text-align:center}
+.filter-btn:hover{border-color:var(--text-faint)}
+.filter-btn.active{background:var(--accent);color:white;border-color:var(--accent)}
+.admin-filter{width:100%;padding:8px 12px;font-size:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;margin-top:4px}
+.icon-btn{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);border-radius:8px;background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;font-size:15px}
+.icon-btn:hover{border-color:var(--text-faint);color:var(--text)}
+.icon-btn.spinning svg{animation:spin .7s linear infinite}
+.block-admin-btn{width:100%;padding:9px 12px;font-size:11px;font-weight:700;border:1.5px solid rgba(248,105,95,0.3);border-radius:8px;background:rgba(248,105,95,0.08);color:var(--red);cursor:pointer;white-space:nowrap;transition:all .2s;margin-top:4px}
+.block-admin-btn:hover{background:rgba(248,105,95,0.16)}
+.block-admin-btn:disabled{opacity:.35;cursor:not-allowed}
+.unblock-btn{background:none;border:1px solid rgba(61,220,132,0.3);color:var(--green);cursor:pointer;font-size:11px;font-weight:700;padding:6px 10px;border-radius:7px;transition:all .2s}
+.unblock-btn:hover{background:rgba(61,220,132,0.1)}
+.online-badge{font-size:11px;color:var(--green);background:rgba(61,220,132,0.1);border:1px solid rgba(61,220,132,0.25);padding:5px 10px;border-radius:8px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.online-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(61,220,132,0.5);animation:dotPulse 2s infinite}
+@keyframes dotPulse{0%{box-shadow:0 0 0 0 rgba(61,220,132,0.5)}70%{box-shadow:0 0 0 6px rgba(61,220,132,0)}100%{box-shadow:0 0 0 0 rgba(61,220,132,0)}}
+
+/* ---------- ADMIN MANAGE ---------- */
+.admin-row{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;flex-wrap:wrap}
+.admin-row:last-child{margin-bottom:0}
+.admin-row-name{font-size:13px;font-weight:700;color:var(--text)}
+.admin-row-email{font-size:11px;color:var(--text-faint);font-weight:500;word-break:break-all}
+.admin-row-you{font-size:9px;color:var(--text-dim);background:var(--surface-2);padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;margin-left:4px}
+.revoke-btn{padding:6px 12px;font-size:11px;font-weight:700;border:1.5px solid rgba(248,105,95,0.3);border-radius:8px;background:rgba(248,105,95,0.08);color:var(--red);cursor:pointer;white-space:nowrap;transition:all .2s;margin-left:auto}
+.revoke-btn:hover{background:rgba(248,105,95,0.16)}
+.restore-btn{padding:6px 12px;font-size:11px;font-weight:700;border:1.5px solid rgba(61,220,132,0.3);border-radius:8px;background:rgba(61,220,132,0.08);color:var(--green);cursor:pointer;white-space:nowrap;transition:all .2s;margin-left:auto}
+.restore-btn:hover{background:rgba(61,220,132,0.16)}
+
+/* ---------- TABLE / CARDS ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 8px;font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:12px 8px;border-bottom:1px solid #1a1a1f;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(22,52,34,0.035)}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.badge-green{background:rgba(61,220,132,0.13);color:var(--green);border:1px solid rgba(61,220,132,0.22)}
+.badge-red{background:rgba(248,105,95,0.13);color:var(--red);border:1px solid rgba(248,105,95,0.22)}
+.badge-gray{background:rgba(122,122,130,0.13);color:var(--text-dim);border:1px solid rgba(122,122,130,0.22)}
+.badge-orange{background:rgba(251,154,60,0.13);color:var(--orange);border:1px solid rgba(251,154,60,0.22)}
+.badge-blue{background:rgba(91,157,251,0.13);color:var(--blue);border:1px solid rgba(91,157,251,0.22)}
+.type-tag{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap}
+.type-trial{color:var(--orange);background:rgba(251,154,60,0.13)}
+.type-forever{color:var(--purple);background:rgba(176,124,240,0.13)}
+.admin-tag{font-size:11px;color:var(--text-dim);font-weight:600}
+.ip-tag{font-size:10px;color:var(--text-faint);font-family:ui-monospace,Menlo,monospace}
+.del-btn{background:none;border:1px solid #3a1c1c;color:var(--red);cursor:pointer;font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;transition:all .2s;margin-left:4px}
+.del-btn:hover{background:rgba(248,105,95,0.1)}
+.empty{text-align:center;color:var(--text-faint);padding:32px 16px;font-size:13px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10000;white-space:nowrap;box-shadow:0 10px 30px rgba(22,52,34,0.25);max-width:90%;text-align:center;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1}
+.loading{text-align:center;color:var(--text-dim);padding:24px;font-size:13px}
+
+/* ---------- MEDIA QUERIES FOR MOBILE ADAPTIVITY ---------- */
+@media(min-width:681px){
+  .btn-gen{width:auto}
+  .admin-filter{width:auto;margin-top:0}
+  .block-admin-btn{width:auto;margin-top:0}
+  .filter-btn{flex:initial}
+}
+
+@media(max-width:680px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .form-group{min-width:100%}
+  table{display:block}
+  thead{display:none}
+  tbody,tr,td{display:block;width:100%}
+  tr{background:var(--bg);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;padding:12px 14px}
+  td{border:none;padding:6px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:right}
+  td::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;text-align:left;flex-shrink:0}
+  td:last-child{justify-content:flex-end;margin-top:4px;border-top:1px dashed var(--border);padding-top:10px}
+}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+    </div>
+    <div class="login-title">Панель управления</div>
+    <div class="login-sub">Войдите через свой аккаунт</div>
+    <div class="login-err" id="login-err"></div>
+    <input class="inp" type="email" id="email-input" placeholder="Email" autocomplete="username">
+    <input class="inp" type="password" id="pwd-input" placeholder="Пароль" autocomplete="current-password">
+    <button class="btn-red" id="login-btn" onclick="doLogin()">
+      <div class="spinner" id="login-spinner"></div>
+      <span id="login-btn-text">Войти</span>
+    </button>
+  </div>
+</div>
+
+<div id="main">
+  <div class="topnav">
+    <div class="brand">Kaspi<span>.</span>Panel</div>
+    <div class="topnav-right">
+      <div class="online-badge" id="online-badge"><span class="online-dot"></span><span id="online-count">1</span> онлайн</div>
+      <div class="user-badge" id="user-badge"></div>
+      <button class="logout-btn" onclick="doLogout()">Выйти ✕</button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="card" id="card-create-code">
+      <div class="card-title">Создать код доступа</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Срок доступа</label>
+          <select id="sel-type">
+            <option value="trial">Пробный</option>
+            <option value="forever">Навсегда</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Примечание</label>
+          <input class="finp" type="text" id="inp-note" placeholder="Имя клиента или заказ">
+        </div>
+        <button class="btn-gen" id="btn-create-code" onclick="generateCode()">Создать</button>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label"><b>Одноразовый код</b> — сработает только один раз</div>
+        <label class="toggle"><input type="checkbox" id="chk-onetime" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="result-box" id="result-box">
+        <div class="result-code" id="result-code"></div>
+        <div class="result-meta" id="result-meta"></div>
+        <div class="result-tags" id="result-tags"></div>
+        <button class="copy-btn" onclick="copyCode()">📋 Скопировать код</button>
+      </div>
+    </div>
+
+    
+
+    <div class="card">
+      <div class="card-title">Все коды доступа</div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all',this)">Все</button>
+        <button class="filter-btn" onclick="setFilter('active',this)">Активные</button>
+        <button class="filter-btn" onclick="setFilter('used',this)">Использованные</button>
+        <button class="filter-btn" onclick="setFilter('expired',this)">Истёкшие</button>
+        <button class="icon-btn" id="refresh-btn" onclick="refreshData()" title="Обновить данные">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <select class="admin-filter" id="admin-filter" onchange="onAdminFilterChange()">
+          <option value="all">Все админы</option>
+        </select>
+        <button class="block-admin-btn" id="block-admin-btn" onclick="blockAdminCodes()" disabled>🚫 Заблокировать коды админа</button>
+      </div>
+      <div id="codes-table-wrap"><div class="loading">Загрузка...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, getDoc, doc, setDoc, deleteDoc, updateDoc, writeBatch, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set as rtdbSet, remove as rtdbRemove, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ============================================================
+   СПИСОК ДОПУЩЕННЫХ АДМИНОВ
+   Значение — имя, или объект с именем и ролью.
+============================================================ */
+const ALLOWED_ADMINS = {
+  "admin@gmail.com": { name: "Владелец", role: "owner" },
+  "bratan@gmail.com": { name: "bratan", role: "admin" },
+  "ceoqpwo@gmail.com": { name: "ceoqpwo", role: "admin" }
+};
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCE9OpTOj6ZOjS6e9FDP51gTarJ4Qwd_xc",
+  authDomain: "admpanel-1d4b7.firebaseapp.com",
+  databaseURL: "https://admpanel-1d4b7-default-rtdb.firebaseio.com",
+  projectId: "admpanel-1d4b7",
+  storageBucket: "admpanel-1d4b7.firebasestorage.app",
+  messagingSenderId: "812156137411",
+  appId: "1:812156137411:web:78c5378fddf400e8619776",
+  measurementId: "G-RQ3BM6NCP8"
+};
+
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+const rtdb = getDatabase(app);
+let presenceRef = null;
+
+const TRIAL_DAYS  = 3;
+const TYPE_LABELS = { trial: `Пробный (${TRIAL_DAYS} дн.)`, forever: 'Навсегда' };
+const TYPE_DAYS   = { trial: TRIAL_DAYS, forever: null };
+
+let currentFilter = 'all';
+let currentAdminFilter = 'all';
+let cachedCodes = [];
+let currentUserEmail = null;
+let currentUserIP = null;
+let revokedAdmins = new Set();
+let revokedListenerStarted = false;
+
+function getAdminName(email) {
+  const item = ALLOWED_ADMINS[email];
+  if (!item) return email;
+  return typeof item === 'object' ? item.name : item;
+}
+
+function isOwner(){
+  const info = ALLOWED_ADMINS[currentUserEmail];
+  return !!(info && typeof info === 'object' && info.role === 'owner');
+}
+
+function fmtDate(iso){ const d=new Date(iso); return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function randCode(){ const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+
+async function fetchIP(){
+  try{
+    const r = await fetch('https://api.ipify.org?format=json');
+    const j = await r.json();
+    return j.ip || '—';
+  }catch(e){
+    return '—';
+  }
+}
+
+async function loadCodes(){
+  try {
+    const snap = await getDocs(collection(db,'codes'));
+    cachedCodes = snap.docs.map(d=>({...d.data(), _id:d.id}));
+  } catch(e){
+    console.error('Ошибка загрузки кодов:', e);
+    cachedCodes = [];
+    const wrap = document.getElementById('codes-table-wrap');
+    if(wrap) wrap.innerHTML = '<div class="empty">Не удалось загрузить данные. Проверьте права доступа в Firebase.</div>';
+  }
+  populateAdminFilter();
+  renderStats();
+  return cachedCodes;
+}
+
+function populateAdminFilter(){
+  const sel = document.getElementById('admin-filter');
+  const admins = [...new Set(cachedCodes.map(c=>c.createdBy).filter(Boolean))].sort();
+  const prev = sel.value;
+  sel.innerHTML = '<option value="all">Все админы</option>' +
+    admins.map(a=>`<option value="${esc(a)}">${esc(getAdminName(a))}</option>`).join('');
+  if(admins.includes(prev)) sel.value = prev;
+}
+
+function renderStats(){
+  const now = new Date();
+  const total = cachedCodes.length;
+  const active = cachedCodes.filter(c=>!c.blocked&&!c.usedAt&&(!c.expires||new Date(c.expires)>now)).length;
+  const forever = cachedCodes.filter(c=>c.type==='forever').length;
+  const used = cachedCodes.filter(c=>!!c.usedAt).length;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-label">Всего кодов</div></div>
+    <div class="stat-box"><div class="stat-num">${active}</div><div class="stat-label">Активных</div></div>
+    <div class="stat-box"><div class="stat-num">${forever}</div><div class="stat-label">Навсегда</div></div>
+    <div class="stat-box"><div class="stat-num">${used}</div><div class="stat-label">Использовано</div></div>
+  `;
+}
+
+onAuthStateChanged(auth, async user => {
+  if(user){
+    if(!(user.email in ALLOWED_ADMINS)){
+      signOut(auth);
+      showLoginError('У этого аккаунта нет доступа к панели.');
+      return;
+    }
+
+    if(!revokedListenerStarted){
+      revokedListenerStarted = true;
+      onSnapshot(collection(db,'revokedAdmins'), snap => {
+        revokedAdmins = new Set(snap.docs.map(d=>d.id));
+        renderAdminManage();
+        if(currentUserEmail && revokedAdmins.has(currentUserEmail)){
+          signOut(auth);
+          showLoginError('Доступ к этому аккаунту был отозван владельцем.');
+        }
+      });
+    }
+
+    if(revokedAdmins.has(user.email)){
+      signOut(auth);
+      showLoginError('Доступ к этому аккаунту был отозван владельцем.');
+      return;
+    }
+
+    currentUserEmail = user.email;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    document.getElementById('user-badge').textContent = getAdminName(user.email);
+    loadCodes().then(()=>renderTable());
+    currentUserIP = await fetchIP();
+    setupPresence(user);
+    renderAdminManage();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('main').style.display = 'none';
+    if(presenceRef){ rtdbRemove(presenceRef).catch(()=>{}); presenceRef = null; }
+    currentUserEmail = null;
+  }
+});
+
+function renderAdminManage(){
+  const wrap = document.getElementById('admin-manage-list');
+  if(!wrap || !currentUserEmail) return;
+  const rows = Object.entries(ALLOWED_ADMINS).map(([email, info])=>{
+    const name = typeof info === 'object' ? info.name : info;
+    const isRevoked = revokedAdmins.has(email);
+    const isYou = email === currentUserEmail;
+    return `<div class="admin-row">
+      <div style="flex:1;min-width:140px">
+        <div class="admin-row-name">${esc(name)} ${isYou?'<span class="admin-row-you">Это вы</span>':''}</div>
+        <div class="admin-row-email">${esc(email)}</div>
+      </div>
+      ${isRevoked ? '<span class="badge badge-red">Доступ отозван</span>' : '<span class="badge badge-green">Активен</span>'}
+      ${isYou ? '' : (isRevoked
+        ? `<button class="restore-btn" onclick="restoreAdmin('${esc(email)}')">Восстановить</button>`
+        : `<button class="revoke-btn" onclick="revokeAdmin('${esc(email)}','${esc(name)}')">Отозвать доступ</button>`)}
+    </div>`;
+  }).join('');
+  wrap.innerHTML = rows || '<div class="empty">Нет админов</div>';
+}
+
+window.revokeAdmin = async function(email, name){
+  if(!confirm(`Отозвать доступ у «${name}» (${email})? Он будет мгновенно разлогинен.`)) return;
+  try {
+    await setDoc(doc(db,'revokedAdmins',email), { revokedAt: new Date().toISOString(), revokedBy: currentUserEmail });
+  } catch(e){
+    console.error('Ошибка отзыва доступа:', e);
+    showToast('Ошибка: нет доступа к базе');
+    return;
+  }
+  showToast(`Доступ отозван: ${name}`);
+};
+
+window.restoreAdmin = async function(email){
+  try {
+    await deleteDoc(doc(db,'revokedAdmins',email));
+  } catch(e){
+    console.error('Ошибка восстановления доступа:', e);
+    showToast('Ошибка: нет доступа к базе');
+    return;
+  }
+  showToast('Доступ восстановлен');
+};
+
+function setupPresence(user){
+  presenceRef = ref(rtdb, 'presence/' + user.uid);
+  rtdbSet(presenceRef, { email: user.email, name: getAdminName(user.email), since: serverTimestamp() });
+  onDisconnect(presenceRef).remove();
+
+  onValue(ref(rtdb, 'presence'), snap => {
+    const val = snap.val() || {};
+    const count = Object.keys(val).length;
+    const el = document.getElementById('online-count');
+    if(el) el.textContent = Math.max(count, 1);
+  }, err => {
+    console.error('Ошибка чтения presence (проверьте правила RTDB для узла /presence):', err);
+  });
+}
+
+function showLoginError(msg){
+  const e = document.getElementById('login-err');
+  e.textContent = msg;
+  e.style.display = 'block';
+}
+
+window.doLogin = async function(){
+  const email = document.getElementById('email-input').value.trim();
+  const pwd   = document.getElementById('pwd-input').value;
+  const err   = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+  const spinner = document.getElementById('login-spinner');
+  const btnText = document.getElementById('login-btn-text');
+
+  err.style.display = 'none';
+  if(!email || !pwd){ showLoginError('Введите email и пароль.'); return; }
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Вход...';
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+  } catch(e) {
+    let msg = 'Ошибка входа. Проверьте данные.';
+    if(e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
+      msg = 'Неверный email или пароль.';
+    else if(e.code === 'auth/too-many-requests')
+      msg = 'Слишком много попыток. Попробуйте позже.';
+    showLoginError(msg);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = 'Войти';
+    document.getElementById('pwd-input').value = '';
+  }
+};
+
+window.doLogout = async function(){
+  if(presenceRef){ await rtdbRemove(presenceRef).catch(()=>{}); presenceRef = null; }
+  await signOut(auth);
+};
+
+document.getElementById('pwd-input').addEventListener('keydown', e => { if(e.key==='Enter') window.doLogin(); });
+document.getElementById('email-input').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('pwd-input').focus(); });
+
+window.generateCode = async function(){
+  const type    = document.getElementById('sel-type').value;
+  const note    = document.getElementById('inp-note').value.trim();
+  const onetime = document.getElementById('chk-onetime').checked;
+  const days    = TYPE_DAYS[type];
+  const expires = days ? new Date(Date.now()+days*86400000).toISOString() : null;
+
+  let code;
+  let attempts = 0;
+  do {
+    code = randCode();
+    attempts++;
+    try {
+      const exists = await getDoc(doc(db,'codes',code));
+      if (!exists.exists()) break;
+    } catch(e) {
+      break;
+    }
+  } while (attempts < 10);
+
+  const ip = currentUserIP || await fetchIP();
+
+  const entry = {
+    code, type, note:note||'—', expires, onetime,
+    blocked:false, usedAt:null, created:new Date().toISOString(),
+    createdBy: currentUserEmail,
+    createdIP: ip
+  };
+
+  try {
+    await setDoc(doc(db,'codes',code), entry);
+  } catch(e){
+    console.error('Ошибка создания кода:', e);
+    showToast('Ошибка: нет доступа к базе');
+    return;
+  }
+
+  document.getElementById('result-code').textContent = code;
+  document.getElementById('result-meta').textContent = TYPE_LABELS[type]+(expires?' · Истекает '+fmtDate(expires):' · Бессрочный');
+  document.getElementById('result-tags').innerHTML = onetime
+    ? '<span class="badge badge-orange">Одноразовый</span>'
+    : '<span class="badge badge-blue">Многоразовый</span>';
+  document.getElementById('result-box').style.display = 'block';
+  document.getElementById('inp-note').value = '';
+  await loadCodes(); renderTable();
+  showToast('Код создан: '+code);
+};
+
+window.copyCode = function(){
+  const code = document.getElementById('result-code').textContent;
+  navigator.clipboard.writeText(code).catch(()=>{});
+  showToast('Скопировано: '+code);
+};
+
+window.deleteCode = async function(id){
+  try {
+    await deleteDoc(doc(db,'codes',id));
+  } catch(e){
+    console.error('Ошибка удаления:', e);
+    showToast('Ошибка: нет доступа к базе');
+    return;
+  }
+  await loadCodes(); renderTable();
+  showToast('Код удалён');
+};
+
+window.refreshData = async function(){
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  await loadCodes();
+  renderTable();
+  btn.classList.remove('spinning');
+  showToast('Данные обновлены');
+};
+
+window.toggleBlock = async function(id, currentlyBlocked){
+  try {
+    await updateDoc(doc(db,'codes',id), { blocked: !currentlyBlocked });
+  } catch(e){
+    console.error('Ошибка изменения статуса:', e);
+    showToast('Ошибка: нет доступа к базе');
+    return;
+  }
+  await loadCodes(); renderTable();
+  showToast(currentlyBlocked ? 'Код разблокирован' : 'Код заблокирован');
+};
+
+window.onAdminFilterChange = function(){
+  currentAdminFilter = document.getElementById('admin-filter').value;
+  document.getElementById('block-admin-btn').disabled = (currentAdminFilter === 'all');
+  renderTable();
+};
+
+window.blockAdminCodes = async function(){
+  const admin = document.getElementById('admin-filter').value;
+  if(admin === 'all') return;
+  const name = getAdminName(admin);
+  const targets = cachedCodes.filter(c => c.createdBy === admin && !c.blocked);
+  if(!targets.length){ showToast('У этого админа нет активных кодов'); return; }
+  if(!confirm(`Заблокировать все коды (${targets.length}), созданные админом «${name}»?`)) return;
+
+  try {
+    const batch = writeBatch(db);
+    targets.forEach(c => batch.update(doc(db,'codes',c._id), { blocked: true }));
+    await batch.commit();
+  } catch(e){
+    console.error('Ошибка массовой блокировки:', e);
+    showToast('Ошибка: нет доступа к базе');
+    return;
+  }
+  await loadCodes(); renderTable();
+  showToast(`Заблокировано кодов: ${targets.length} (${name})`);
+};
+
+window.setFilter = function(f,btn){
+  currentFilter=f;
+  btn.closest('.filter-row').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+};
+
+window.renderTable = function(){
+  currentAdminFilter = document.getElementById('admin-filter').value;
+  const now = new Date();
+  let list = [...cachedCodes];
+  if(currentFilter==='active')  list=list.filter(c=>!c.blocked&&!c.usedAt&&(!c.expires||new Date(c.expires)>now));
+  if(currentFilter==='used')    list=list.filter(c=>!!c.usedAt);
+  if(currentFilter==='expired') list=list.filter(c=>c.expires&&new Date(c.expires)<=now);
+  if(currentAdminFilter!=='all') list=list.filter(c=>c.createdBy===currentAdminFilter);
+
+  const wrap = document.getElementById('codes-table-wrap');
+  if(!list.length){ wrap.innerHTML='<div class="empty">Нет кодов</div>'; return; }
+
+  const rows = list.map(c=>{
+    const isBlocked=c.blocked, isUsed=!!c.usedAt, isExpired=c.expires&&new Date(c.expires)<=now;
+    const status = isBlocked?'<span class="badge badge-red">Заблокирован</span>'
+                 : isUsed?'<span class="badge badge-orange">Использован</span>'
+                 : isExpired?'<span class="badge badge-gray">Истёк</span>'
+                 : '<span class="badge badge-green">Активен</span>';
+    const oneTag = c.onetime?' <span class="badge badge-orange" style="font-size:9px">1×</span>':'';
+    const typeClass = 'type-' + esc(c.type||'forever');
+    const typeLabel = esc(TYPE_LABELS[c.type||'forever']||c.type);
+    const adminName = c.createdBy ? esc(getAdminName(c.createdBy)) : '—';
+    const ip = (isOwner() && c.createdIP) ? esc(c.createdIP) : '—';
+    return `<tr style="${isBlocked||isExpired||isUsed?'opacity:.5':''}">
+      <td data-label="Код" style="font-family:ui-monospace,Menlo,monospace;font-weight:700;font-size:15px;letter-spacing:.1em;color:var(--text)">${esc(c.code)}${oneTag}</td>
+      <td data-label="Тип"><span class="type-tag ${typeClass}">${typeLabel}</span></td>
+      <td data-label="Примечание" style="color:var(--text-dim);font-size:12px">${esc(c.note)}</td>
+      <td data-label="Админ"><span class="admin-tag">${adminName}</span></td>
+      <td data-label="IP"><span class="ip-tag">${ip}</span></td>
+      <td data-label="Истекает" style="font-size:11px;color:var(--text-faint)">${c.expires?fmtDate(c.expires):'∞'}</td>
+      <td data-label="Статус">${status}</td>
+      <td data-label="Действия">
+        ${isBlocked
+          ? `<button class="unblock-btn" onclick="toggleBlock('${esc(c._id)}',true)">✓ Разблок</button>`
+          : `<button class="unblock-btn" style="border-color:rgba(251,154,60,.3);color:var(--orange)" onclick="toggleBlock('${esc(c._id)}',false)">🚫 Блок</button>`}
+        <button class="del-btn" onclick="deleteCode('${esc(c._id)}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML='<table><thead><tr><th>Код</th><th>Тип</th><th>Примечание</th><th>Админ</th><th>IP</th><th>Истекает</th><th>Статус</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+};
+</script>
+</body>
+</html>
